@@ -22,31 +22,7 @@ export type DashboardSnapshot = {
       realized_pnl: number;
       exposure_by_strategy: Array<{ strategy: string; exposure: number }>;
     };
-    recent_ai_decisions: Array<{
-    id: string;
-    trade_id: string | null;
-    market_id: string;
-    asset_id: string | null;
-    strategy: string;
-    confidence_score: number;
-    probability_estimate: number;
-    expected_edge: number;
-    risk_classification: string;
-    trade_rank_score: number;
-    justification: string;
-    features_json: string | null;
-    created_ts: number;
-  }>;
-  recent_audit: Array<{
-    id: string;
-    event_type: string;
-    entity_type: string;
-    entity_id: string | null;
-    message: string;
-    payload_json: string | null;
-    created_ts: number;
-  }>;
-  risk_state: {
+    risk_state: {
       trading_day: string;
       paused: boolean;
       pause_reason: string | null;
@@ -106,6 +82,47 @@ export type DashboardSnapshot = {
     max_position_size: number;
     updated_ts: number | null;
   };
+  live_config: {
+    wallet_address: string | null;
+    clob_api_key: string | null;
+    clob_api_secret: string | null;
+    clob_api_passphrase: string | null;
+    enabled: boolean;
+    armed_for_execution: boolean;
+    require_human_approval: boolean;
+    max_live_notional: number;
+    signature_type: number;
+    funder_address: string | null;
+    updated_ts: number | null;
+  };
+  live_wallet_status: {
+    wallet_address: string | null;
+    funder_address: string | null;
+    signature_type: number;
+    has_api_key: boolean;
+    has_api_secret: boolean;
+    has_api_passphrase: boolean;
+    has_encrypted_private_key: boolean;
+    has_rpc_url: boolean;
+    armed_for_execution: boolean;
+    runtime_live_enabled: boolean;
+  };
+  live_requests: Array<{
+    id: string;
+    market_id: string;
+    asset_id: string | null;
+    strategy: string;
+    side: string;
+    size: number;
+    price: number;
+    status: string;
+    rationale: string | null;
+    approval_required: boolean;
+    approved_by: string | null;
+    rejection_reason: string | null;
+    created_ts: number;
+    decided_ts: number | null;
+  }>;
   market_cache: {
     total_markets: number;
     active_markets: number;

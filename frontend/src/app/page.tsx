@@ -130,6 +130,38 @@ export default async function HomePage() {
             </div>
 
             <div className="panel">
+              <h2 className="text-xl font-semibold">Live execution controlado</h2>
+              <div className="mt-4 space-y-3 text-sm text-slate-300">
+                <div className="flex justify-between"><span>Runtime live</span><span>{dashboard.live_wallet_status.runtime_live_enabled ? "on" : "off"}</span></div>
+                <div className="flex justify-between"><span>Armed</span><span>{dashboard.live_config.armed_for_execution ? "sim" : "não"}</span></div>
+                <div className="flex justify-between"><span>Aprovação humana</span><span>{dashboard.live_config.require_human_approval ? "sim" : "não"}</span></div>
+                <div className="flex justify-between"><span>Max nocional</span><span>${fmt(dashboard.live_config.max_live_notional)}</span></div>
+                <div className="flex justify-between"><span>Wallet</span><span>{dashboard.live_wallet_status.wallet_address ?? "não configurada"}</span></div>
+                <div className="flex justify-between"><span>API key</span><span>{dashboard.live_wallet_status.has_api_key ? "ok" : "faltando"}</span></div>
+                <div className="flex justify-between"><span>RPC</span><span>{dashboard.live_wallet_status.has_rpc_url ? "ok" : "faltando"}</span></div>
+              </div>
+            </div>
+
+            <div className="panel">
+              <h2 className="text-xl font-semibold">Fila live</h2>
+              <div className="mt-4 space-y-3 text-sm text-slate-300">
+                {dashboard.live_requests.length === 0 ? (
+                  <div className="text-slate-400">Sem requests live ainda.</div>
+                ) : (
+                  dashboard.live_requests.slice(0, 5).map((item) => (
+                    <div key={item.id} className="rounded-xl border border-slate-800 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium">{item.strategy}</span>
+                        <span className="text-slate-400">{item.status}</span>
+                      </div>
+                      <div className="mt-1 text-slate-500 break-all">{item.market_id}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="panel">
               <h2 className="text-xl font-semibold">Risk engine</h2>
               <div className="mt-4 space-y-3 text-sm text-slate-300">
                 <div className="flex justify-between"><span>Pausado</span><span>{dashboard.risk_state.paused ? "sim" : "não"}</span></div>
