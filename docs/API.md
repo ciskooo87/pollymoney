@@ -6,10 +6,10 @@
 ## Dashboard
 - `GET /api/dashboard/snapshot`
 
-## Markets
+## Markets internos
 - `GET /api/markets/opportunities`
 
-## Risk
+## Risco
 - `GET /api/risk/limits`
 
 ## Strategies
@@ -30,3 +30,30 @@ Exemplo:
   "confidence": 0.81
 }
 ```
+
+## Polymarket REST
+- `GET /api/polymarket/markets/simplified?next_cursor=`
+- `GET /api/polymarket/markets/{condition_id}`
+- `GET /api/polymarket/markets/{condition_id}/clob`
+- `GET /api/polymarket/books?asset_ids=id1,id2`
+- `GET /api/polymarket/prices-history/{asset_id}?interval=1d&fidelity=5`
+
+## Polymarket WebSocket control
+- `POST /api/polymarket/ws/market/connect`
+- `POST /api/polymarket/ws/market/subscribe`
+- `POST /api/polymarket/ws/market/unsubscribe`
+- `GET /api/polymarket/ws/market/events?limit=25`
+- `GET /api/polymarket/ws/status`
+- `POST /api/polymarket/ws/disconnect`
+
+Payload para conectar market stream:
+```json
+{
+  "asset_ids": ["token-id-1", "token-id-2"],
+  "level": 2,
+  "initial_dump": true,
+  "custom_feature_enabled": true
+}
+```
+
+> O canal `user` ficou reservado para a próxima etapa, quando a camada autenticada CLOB L2 e execução real/paper autenticada forem plugadas.

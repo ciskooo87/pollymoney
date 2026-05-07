@@ -31,6 +31,8 @@ Engine profissional para trading quantitativo em mercados preditivos, com foco i
 ## Capacidades previstas
 
 - Scanner de ineficiências de mercado
+- Integração REST pública com Polymarket (markets, books, price history)
+- Gerenciador de WebSocket para market channel da Polymarket
 - Arbitragem entre mercados correlacionados
 - Mean reversion, momentum e sentiment trading
 - Ranking de trades com score probabilístico
