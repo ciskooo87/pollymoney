@@ -83,3 +83,5 @@ Payload para conectar market stream:
 - `POST /api/orders/live/requests/{request_id}/decision`
 - `GET /api/orders/live/config`
 - `POST /api/orders/live/config`
+- `POST /api/orders/live/arm`
+- `GET /api/orders/live/wallet-status`

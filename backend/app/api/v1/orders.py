@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.schemas.live import LiveExecutionConfigRequest, LiveOrderDecisionRequest
+from app.schemas.live import LiveArmRequest, LiveExecutionConfigRequest, LiveOrderDecisionRequest
 from app.schemas.order import OrderRequest
 from app.services.ai_repository import AIRepository
 from app.services.audit_service import AuditService
@@ -44,6 +44,16 @@ def live_config():
 @router.post("/live/config")
 def update_live_config(payload: LiveExecutionConfigRequest):
     return live_service.update_config(payload)
+
+
+@router.post("/live/arm")
+def arm_live_execution(payload: LiveArmRequest):
+    return live_service.set_arm_state(payload)
+
+
+@router.get("/live/wallet-status")
+def live_wallet_status():
+    return live_service.wallet_status()
 
 
 @router.post("/paper/run-cycle")

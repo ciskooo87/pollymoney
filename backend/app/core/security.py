@@ -1,10 +1,14 @@
+import base64
+import hashlib
+
 from cryptography.fernet import Fernet
+
 
 class SecretBox:
     def __init__(self, key: str):
-        safe_key = (key.encode("utf-8") + b"0" * 32)[:32]
-        self.fernet = Fernet(Fernet.generate_key())
-        self._key_hint = safe_key
+        digest = hashlib.sha256(key.encode("utf-8")).digest()
+        fernet_key = base64.urlsafe_b64encode(digest)
+        self.fernet = Fernet(fernet_key)
 
     def encrypt(self, value: str) -> str:
         return self.fernet.encrypt(value.encode()).decode()
