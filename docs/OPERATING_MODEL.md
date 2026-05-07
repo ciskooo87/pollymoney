@@ -66,3 +66,8 @@ Antes de abrir um trade paper, o engine gera uma decisão analítica persistida 
 - justification textual
 
 Essas decisões ficam disponíveis por API e aparecem no dashboard/audit trail.
+
+
+## Live execution controlado
+
+A camada live foi preparada para CLOB L2 com configuração persistida, limite nocional e fila de aprovação humana. Mesmo com credenciais cadastradas, o runtime continua soberano: se `ENABLE_LIVE_TRADING=false`, qualquer pedido live fica bloqueado antes de execução real.

@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     encryption_key: str
     enable_live_trading: bool = False
     require_human_approval: bool = False
+    wallet_private_key_encrypted: str | None = None
+    web3_rpc_url: str | None = None
+    polymarket_clob_api_key: str | None = None
+    polymarket_clob_api_secret: str | None = None
+    polymarket_clob_api_passphrase: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

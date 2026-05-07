@@ -1,21 +1,49 @@
 from fastapi import APIRouter
 
+from app.schemas.live import LiveExecutionConfigRequest, LiveOrderDecisionRequest
 from app.schemas.order import OrderRequest
-from app.services.execution import ExecutionService
-from app.services.paper_trading import PaperTradingEngine
-from app.services.audit_service import AuditService
 from app.services.ai_repository import AIRepository
+from app.services.audit_service import AuditService
+from app.services.execution import ExecutionService
+from app.services.live_execution import LiveExecutionService
+from app.services.paper_trading import PaperTradingEngine
 
 router = APIRouter()
 service = ExecutionService()
 paper_engine = PaperTradingEngine()
 audit_service = AuditService()
 ai_repository = AIRepository()
+live_service = LiveExecutionService()
 
 
 @router.post("/simulate")
 def simulate_order(payload: OrderRequest):
     return service.submit_order(payload)
+
+
+@router.post("/live/request")
+def request_live_order(payload: OrderRequest):
+    return live_service.submit_live_order(payload)
+
+
+@router.get("/live/requests")
+def live_requests(limit: int = 50):
+    return live_service.list_requests(limit=limit)
+
+
+@router.post("/live/requests/{request_id}/decision")
+def decide_live_request(request_id: str, payload: LiveOrderDecisionRequest):
+    return live_service.decide_request(request_id, payload)
+
+
+@router.get("/live/config")
+def live_config():
+    return live_service.get_config()
+
+
+@router.post("/live/config")
+def update_live_config(payload: LiveExecutionConfigRequest):
+    return live_service.update_config(payload)
 
 
 @router.post("/paper/run-cycle")

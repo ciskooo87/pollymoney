@@ -76,3 +76,10 @@ Payload para conectar market stream:
 - `GET /api/orders/paper/audit?limit=50&event_type=`
 - `GET /api/orders/paper/replay/{trade_id}`
 - `GET /api/orders/paper/ai-decisions?limit=20`
+
+## Live execution controlado
+- `POST /api/orders/live/request`
+- `GET /api/orders/live/requests?limit=50`
+- `POST /api/orders/live/requests/{request_id}/decision`
+- `GET /api/orders/live/config`
+- `POST /api/orders/live/config`
