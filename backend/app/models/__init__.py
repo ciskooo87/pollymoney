@@ -1,4 +1,5 @@
 from app.models.market import Market, MarketOrderBook, MarketPriceHistoryPoint, MarketToken
+from app.models.risk import RiskState
 from app.models.trade import Trade
 
 __all__ = [
@@ -6,5 +7,6 @@ __all__ = [
     "MarketOrderBook",
     "MarketPriceHistoryPoint",
     "MarketToken",
+    "RiskState",
     "Trade",
 ]

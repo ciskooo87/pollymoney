@@ -43,3 +43,14 @@ Observação: books públicos podem voltar vazios para muitos assets, então aus
 ## Paper trading engine
 
 O motor paper roda ciclos automáticos, tenta abrir posições a partir dos sinais ranqueados, marca posições abertas a mercado e fecha trades por alvo, stop simplificado ou timeout operacional.
+
+
+## Risk engine soberano
+
+O sistema mantém um estado diário de risco com pausa automática por:
+- meta diária atingida
+- stop diário atingido
+- max drawdown
+- sequência de perdas
+
+Além disso, expõe gross exposure e distribuição por estratégia no portfolio manager.

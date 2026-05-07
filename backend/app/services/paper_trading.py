@@ -9,6 +9,7 @@ from app.db.session import SessionLocal
 from app.models.market import MarketOrderBook, MarketToken
 from app.models.trade import Trade
 from app.services.risk_manager import RiskManager
+from app.services.portfolio_manager import PortfolioManager
 from app.services.strategy_manager import StrategyManager
 
 
@@ -16,8 +17,10 @@ class PaperTradingEngine:
     def __init__(self):
         self.strategy_manager = StrategyManager()
         self.risk_manager = RiskManager()
+        self.portfolio_manager = PortfolioManager()
 
     def run_cycle(self, max_new_trades: int = 5) -> dict:
+        risk_state = self.risk_manager.refresh_state()
         signals = self.strategy_manager.rank_signals()
         opened = []
         skipped = []
@@ -29,13 +32,14 @@ class PaperTradingEngine:
             if not market and not token:
                 skipped.append({"market": signal["market"], "reason": "book_and_token_not_available"})
                 continue
-            if not self.risk_manager.allow_trade(signal["confidence"], signal["edge"]):
+            estimated_size = self._position_size(signal["confidence"], signal["edge"])
+            if not self.risk_manager.allow_trade(signal["confidence"], signal["edge"], requested_size=estimated_size):
                 skipped.append({"market": signal["market"], "reason": "risk_rejected"})
                 continue
             if self._has_open_trade(signal["market"], signal["strategy"]):
                 skipped.append({"market": signal["market"], "reason": "already_open"})
                 continue
-            opened.append(self._open_trade(signal, market, token))
+            opened.append(self._open_trade(signal, market, token, estimated_size))
 
         closed = self._mark_to_market_and_close()
         stats = self.summary()
@@ -43,6 +47,7 @@ class PaperTradingEngine:
             "opened": opened,
             "closed": closed,
             "skipped": skipped,
+            "risk_state": risk_state,
             "summary": stats,
         }
 
@@ -70,9 +75,8 @@ class PaperTradingEngine:
             ).scalar_one_or_none()
             return existing is not None
 
-    def _open_trade(self, signal: dict, book: MarketOrderBook | None, token: MarketToken | None) -> dict:
+    def _open_trade(self, signal: dict, book: MarketOrderBook | None, token: MarketToken | None, size: float) -> dict:
         price = self._entry_price(book, token)
-        size = self._position_size(signal["confidence"], signal["edge"])
         now = int(time.time())
         trade_id = str(uuid4())
         asset_id = book.asset_id if book else (token.token_id if token else None)
@@ -158,6 +162,8 @@ class PaperTradingEngine:
             wins = session.scalar(select(func.count()).select_from(Trade).where(Trade.paper.is_(True), Trade.status == "closed", Trade.realized_pnl > 0)) or 0
             realized = session.scalar(select(func.coalesce(func.sum(Trade.realized_pnl), 0.0)).where(Trade.paper.is_(True), Trade.status == "closed")) or 0.0
             avg_conf = session.scalar(select(func.coalesce(func.avg(Trade.confidence), 0.0)).where(Trade.paper.is_(True))) or 0.0
+            portfolio = self.portfolio_manager.snapshot()
+            risk_state = self.risk_manager.refresh_state()
             return {
                 "total_trades": int(total),
                 "open_positions": int(open_positions),
@@ -166,6 +172,8 @@ class PaperTradingEngine:
                 "win_rate": (wins / closed) if closed else 0.0,
                 "realized_pnl": float(realized),
                 "avg_confidence": float(avg_conf),
+                "portfolio": portfolio,
+                "risk_state": risk_state,
             }
 
     def recent_trades(self, limit: int = 20) -> list[dict]:

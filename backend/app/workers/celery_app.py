@@ -27,5 +27,9 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute="*/10"),
         "args": (5,),
     },
+    "refresh-risk-state-every-3m": {
+        "task": "app.workers.tasks.refresh_risk_state",
+        "schedule": crontab(minute="*/3"),
+    },
 }
 celery_app.conf.timezone = "Europe/Berlin"

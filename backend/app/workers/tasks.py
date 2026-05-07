@@ -3,6 +3,7 @@ import asyncio
 from app.services.market_ingestion import MarketIngestionService
 from app.services.market_repository import MarketRepository
 from app.services.paper_trading import PaperTradingEngine
+from app.services.risk_manager import RiskManager
 from app.workers.celery_app import celery_app
 
 
@@ -32,6 +33,12 @@ def refresh_price_history(asset_id: str, interval: str = "1d", fidelity: int = 5
 def run_paper_trading_cycle(max_new_trades: int = 5):
     engine = PaperTradingEngine()
     return engine.run_cycle(max_new_trades=max_new_trades)
+
+
+@celery_app.task
+def refresh_risk_state():
+    manager = RiskManager()
+    return manager.refresh_state()
 
 
 @celery_app.task
