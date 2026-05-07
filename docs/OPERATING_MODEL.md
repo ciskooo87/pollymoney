@@ -29,3 +29,12 @@ Toda decisão importante deve gerar:
 - estratégia responsável
 - veredito de risco
 - ação executada
+
+
+## Beat/Cron interno
+
+Refresh automático configurado:
+- markets simplificados: a cada 15 minutos
+- order books: a cada 5 minutos
+
+Observação: books públicos podem voltar vazios para muitos assets, então ausência de book não deve ser tratada como falha isolada.

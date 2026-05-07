@@ -54,3 +54,14 @@ docker compose up --build
 ## Aviso honesto
 
 Este projeto foi estruturado para **maximizar disciplina, auditabilidade e qualidade de decisão**, não para prometer retorno garantido. Mercados preditivos têm risco real, liquidez variável, fricções operacionais e risco regulatório/técnico.
+
+
+## Frontend
+
+Configure o frontend para falar com a API:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+O dashboard agora lê dados reais de `dashboard/snapshot`, `strategies/rankings` e `polymarket/ws/status`.
