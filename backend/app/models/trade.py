@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Float, Integer, String
+from sqlalchemy import Boolean, Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.session import Base
@@ -16,9 +16,13 @@ class Trade(Base):
     price: Mapped[float] = mapped_column(Float)
     expected_edge: Mapped[float] = mapped_column(Float)
     confidence: Mapped[float] = mapped_column(Float)
+    ai_confidence_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ai_probability_estimate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ai_trade_rank_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    risk_classification: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     status: Mapped[str] = mapped_column(String, default="simulated", index=True)
     paper: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
-    rationale: Mapped[str | None] = mapped_column(String, nullable=True)
+    rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
     opened_ts: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     closed_ts: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
     exit_price: Mapped[float | None] = mapped_column(Float, nullable=True)

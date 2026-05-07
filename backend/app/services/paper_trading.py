@@ -11,6 +11,8 @@ from app.models.trade import Trade
 from app.services.risk_manager import RiskManager
 from app.services.portfolio_manager import PortfolioManager
 from app.services.audit_service import AuditService
+from app.services.ai_service import AIService
+from app.services.ai_repository import AIRepository
 from app.services.strategy_manager import StrategyManager
 
 
@@ -20,6 +22,8 @@ class PaperTradingEngine:
         self.risk_manager = RiskManager()
         self.portfolio_manager = PortfolioManager()
         self.audit_service = AuditService()
+        self.ai_service = AIService()
+        self.ai_repository = AIRepository()
 
     def run_cycle(self, max_new_trades: int = 5) -> dict:
         risk_state = self.risk_manager.refresh_state()
@@ -41,16 +45,32 @@ class PaperTradingEngine:
                 skipped.append({"market": signal["market"], "reason": "book_and_token_not_available"})
                 self.audit_service.log("paper_trade_skipped", "signal", "missing market data", payload={"signal": signal, "reason": "book_and_token_not_available"})
                 continue
-            estimated_size = self._position_size(signal["confidence"], signal["edge"])
-            if not self.risk_manager.allow_trade(signal["confidence"], signal["edge"], requested_size=estimated_size):
-                skipped.append({"market": signal["market"], "reason": "risk_rejected"})
-                self.audit_service.log("paper_trade_skipped", "signal", "risk manager rejected trade", payload={"signal": signal, "reason": "risk_rejected"})
+            preview_price = self._entry_price(market, token)
+            ai_decision = self.ai_service.evaluate_trade(
+                market_id=signal["market"],
+                asset_id=(market.asset_id if market else (token.token_id if token else None)),
+                strategy=signal["strategy"],
+                price=preview_price,
+                confidence=signal["confidence"],
+                edge=signal["edge"],
+            )
+            decision_ref = self.ai_repository.create_decision(
+                trade_id=None,
+                market_id=signal["market"],
+                asset_id=(market.asset_id if market else (token.token_id if token else None)),
+                strategy=signal["strategy"],
+                decision=ai_decision,
+            )
+            estimated_size = self._position_size(ai_decision["confidence_score"], signal["edge"])
+            if not self.risk_manager.allow_trade(ai_decision["confidence_score"], signal["edge"], requested_size=estimated_size):
+                skipped.append({"market": signal["market"], "reason": "risk_rejected", "ai": ai_decision})
+                self.audit_service.log("paper_trade_skipped", "signal", "risk manager rejected trade", payload={"signal": signal, "reason": "risk_rejected", "ai_decision": ai_decision})
                 continue
             if self._has_open_trade(signal["market"], signal["strategy"]):
-                skipped.append({"market": signal["market"], "reason": "already_open"})
-                self.audit_service.log("paper_trade_skipped", "signal", "trade already open", payload={"signal": signal, "reason": "already_open"})
+                skipped.append({"market": signal["market"], "reason": "already_open", "ai": ai_decision})
+                self.audit_service.log("paper_trade_skipped", "signal", "trade already open", payload={"signal": signal, "reason": "already_open", "ai_decision": ai_decision})
                 continue
-            opened.append(self._open_trade(signal, market, token, estimated_size))
+            opened.append(self._open_trade(signal, market, token, estimated_size, ai_decision, decision_ref["id"]))
 
         closed = self._mark_to_market_and_close()
         stats = self.summary()
@@ -92,7 +112,7 @@ class PaperTradingEngine:
             ).scalar_one_or_none()
             return existing is not None
 
-    def _open_trade(self, signal: dict, book: MarketOrderBook | None, token: MarketToken | None, size: float) -> dict:
+    def _open_trade(self, signal: dict, book: MarketOrderBook | None, token: MarketToken | None, size: float, ai_decision: dict, decision_id: str) -> dict:
         price = self._entry_price(book, token)
         now = int(time.time())
         trade_id = str(uuid4())
@@ -107,20 +127,25 @@ class PaperTradingEngine:
             price=price,
             expected_edge=signal["edge"],
             confidence=signal["confidence"],
+            ai_confidence_score=ai_decision["confidence_score"],
+            ai_probability_estimate=ai_decision["probability_estimate"],
+            ai_trade_rank_score=ai_decision["trade_rank_score"],
+            risk_classification=ai_decision["risk_classification"],
             status="open",
             paper=True,
-            rationale=f"signal={signal['strategy']} edge={signal['edge']:.4f} confidence={signal['confidence']:.2f}",
+            rationale=ai_decision["justification"],
             opened_ts=now,
         )
         with SessionLocal() as session:
             session.add(trade)
             session.commit()
+        self.ai_repository.attach_trade(decision_id, trade_id)
         self.audit_service.log(
             event_type="paper_trade_opened",
             entity_type="trade",
             entity_id=trade_id,
             message="paper trade opened",
-            payload={"signal": signal, "asset_id": asset_id, "price": price, "size": size},
+            payload={"signal": signal, "asset_id": asset_id, "price": price, "size": size, "ai_decision": ai_decision, "decision_id": decision_id},
         )
         return {
             "trade_id": trade_id,
@@ -221,6 +246,10 @@ class PaperTradingEngine:
                     "price": t.price,
                     "status": t.status,
                     "confidence": t.confidence,
+                    "ai_confidence_score": t.ai_confidence_score,
+                    "ai_probability_estimate": t.ai_probability_estimate,
+                    "ai_trade_rank_score": t.ai_trade_rank_score,
+                    "risk_classification": t.risk_classification,
                     "expected_edge": t.expected_edge,
                     "realized_pnl": t.realized_pnl,
                     "rationale": t.rationale,

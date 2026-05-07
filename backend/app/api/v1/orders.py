@@ -4,11 +4,13 @@ from app.schemas.order import OrderRequest
 from app.services.execution import ExecutionService
 from app.services.paper_trading import PaperTradingEngine
 from app.services.audit_service import AuditService
+from app.services.ai_repository import AIRepository
 
 router = APIRouter()
 service = ExecutionService()
 paper_engine = PaperTradingEngine()
 audit_service = AuditService()
+ai_repository = AIRepository()
 
 
 @router.post("/simulate")
@@ -39,3 +41,8 @@ def paper_trade_replay(trade_id: str):
 @router.get("/paper/audit")
 def paper_audit(limit: int = 50, event_type: str | None = None):
     return audit_service.recent(limit=limit, event_type=event_type)
+
+
+@router.get("/paper/ai-decisions")
+def paper_ai_decisions(limit: int = 20):
+    return ai_repository.recent(limit=limit)

@@ -22,7 +22,22 @@ export type DashboardSnapshot = {
       realized_pnl: number;
       exposure_by_strategy: Array<{ strategy: string; exposure: number }>;
     };
-    recent_audit: Array<{
+    recent_ai_decisions: Array<{
+    id: string;
+    trade_id: string | null;
+    market_id: string;
+    asset_id: string | null;
+    strategy: string;
+    confidence_score: number;
+    probability_estimate: number;
+    expected_edge: number;
+    risk_classification: string;
+    trade_rank_score: number;
+    justification: string;
+    features_json: string | null;
+    created_ts: number;
+  }>;
+  recent_audit: Array<{
     id: string;
     event_type: string;
     entity_type: string;
@@ -53,6 +68,21 @@ export type DashboardSnapshot = {
     realized_pnl: number;
     exposure_by_strategy: Array<{ strategy: string; exposure: number }>;
   };
+  recent_ai_decisions: Array<{
+    id: string;
+    trade_id: string | null;
+    market_id: string;
+    asset_id: string | null;
+    strategy: string;
+    confidence_score: number;
+    probability_estimate: number;
+    expected_edge: number;
+    risk_classification: string;
+    trade_rank_score: number;
+    justification: string;
+    features_json: string | null;
+    created_ts: number;
+  }>;
   recent_audit: Array<{
     id: string;
     event_type: string;

@@ -54,3 +54,15 @@ O sistema mantém um estado diário de risco com pausa automática por:
 - sequência de perdas
 
 Além disso, expõe gross exposure e distribuição por estratégia no portfolio manager.
+
+
+## IA explicável
+
+Antes de abrir um trade paper, o engine gera uma decisão analítica persistida com:
+- confidence score
+- probability estimate
+- risk classification
+- trade rank score
+- justification textual
+
+Essas decisões ficam disponíveis por API e aparecem no dashboard/audit trail.

@@ -110,6 +110,26 @@ export default async function HomePage() {
 
           <div className="space-y-6">
             <div className="panel">
+              <h2 className="text-xl font-semibold">IA explicável</h2>
+              <div className="mt-4 space-y-3 text-sm text-slate-300">
+                {dashboard.recent_ai_decisions.length === 0 ? (
+                  <div className="text-slate-400">Sem decisões de IA ainda.</div>
+                ) : (
+                  dashboard.recent_ai_decisions.slice(0, 3).map((item) => (
+                    <div key={item.id} className="rounded-xl border border-slate-800 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium">{item.strategy}</span>
+                        <span className="text-slate-400">risk {item.risk_classification}</span>
+                      </div>
+                      <div className="mt-1 text-slate-400">score {item.confidence_score.toFixed(2)} · rank {item.trade_rank_score.toFixed(2)}</div>
+                      <div className="mt-1 text-slate-500">{item.justification}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="panel">
               <h2 className="text-xl font-semibold">Risk engine</h2>
               <div className="mt-4 space-y-3 text-sm text-slate-300">
                 <div className="flex justify-between"><span>Pausado</span><span>{dashboard.risk_state.paused ? "sim" : "não"}</span></div>
