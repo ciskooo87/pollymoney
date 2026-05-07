@@ -137,6 +137,25 @@ export default async function HomePage() {
             </div>
 
             <div className="panel">
+              <h2 className="text-xl font-semibold">Audit trail</h2>
+              <div className="mt-4 space-y-3 text-sm text-slate-300">
+                {dashboard.recent_audit.length === 0 ? (
+                  <div className="text-slate-400">Sem eventos auditáveis ainda.</div>
+                ) : (
+                  dashboard.recent_audit.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-slate-800 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium">{item.event_type}</span>
+                        <span className="text-slate-500">{item.entity_type}</span>
+                      </div>
+                      <div className="mt-1 text-slate-400">{item.message}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="panel">
               <h2 className="text-xl font-semibold">Alertas</h2>
               <ul className="mt-4 space-y-3 text-sm text-slate-300">
                 {dashboard.alerts.map((alert) => <li key={alert}>• {alert}</li>)}

@@ -2,10 +2,12 @@ from fastapi import APIRouter
 
 from app.services.market_repository import MarketRepository
 from app.services.paper_trading import PaperTradingEngine
+from app.services.audit_service import AuditService
 
 router = APIRouter()
 repo = MarketRepository()
 paper = PaperTradingEngine()
+audit = AuditService()
 
 
 @router.get("/snapshot")
@@ -14,6 +16,7 @@ def snapshot():
     paper_summary = paper.summary()
     risk_state = paper_summary["risk_state"]
     portfolio = paper_summary["portfolio"]
+    recent_audit = audit.recent(limit=10)
     return {
         "pnl": paper_summary["realized_pnl"],
         "roi": paper_summary["realized_pnl"] / 10000 if paper_summary["total_trades"] else 0.0,
@@ -26,6 +29,7 @@ def snapshot():
         "market_cache": cache,
         "portfolio": portfolio,
         "risk_state": risk_state,
+        "recent_audit": recent_audit,
         "alerts": [
             "paper trading ativo",
             f"{cache['active_markets']} mercados ativos em cache",

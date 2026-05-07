@@ -71,3 +71,7 @@ Payload para conectar market stream:
 
 ## Risk
 - `GET /api/risk/state`
+
+## Audit / Replay
+- `GET /api/orders/paper/audit?limit=50&event_type=`
+- `GET /api/orders/paper/replay/{trade_id}`

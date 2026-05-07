@@ -22,7 +22,16 @@ export type DashboardSnapshot = {
       realized_pnl: number;
       exposure_by_strategy: Array<{ strategy: string; exposure: number }>;
     };
-    risk_state: {
+    recent_audit: Array<{
+    id: string;
+    event_type: string;
+    entity_type: string;
+    entity_id: string | null;
+    message: string;
+    payload_json: string | null;
+    created_ts: number;
+  }>;
+  risk_state: {
       trading_day: string;
       paused: boolean;
       pause_reason: string | null;
@@ -44,6 +53,15 @@ export type DashboardSnapshot = {
     realized_pnl: number;
     exposure_by_strategy: Array<{ strategy: string; exposure: number }>;
   };
+  recent_audit: Array<{
+    id: string;
+    event_type: string;
+    entity_type: string;
+    entity_id: string | null;
+    message: string;
+    payload_json: string | null;
+    created_ts: number;
+  }>;
   risk_state: {
     trading_day: string;
     paused: boolean;

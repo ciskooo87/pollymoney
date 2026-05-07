@@ -3,10 +3,12 @@ from fastapi import APIRouter
 from app.schemas.order import OrderRequest
 from app.services.execution import ExecutionService
 from app.services.paper_trading import PaperTradingEngine
+from app.services.audit_service import AuditService
 
 router = APIRouter()
 service = ExecutionService()
 paper_engine = PaperTradingEngine()
+audit_service = AuditService()
 
 
 @router.post("/simulate")
@@ -27,3 +29,13 @@ def paper_summary():
 @router.get("/paper/trades")
 def paper_trades(limit: int = 20):
     return paper_engine.recent_trades(limit=limit)
+
+
+@router.get("/paper/replay/{trade_id}")
+def paper_trade_replay(trade_id: str):
+    return audit_service.replay_for_trade(trade_id)
+
+
+@router.get("/paper/audit")
+def paper_audit(limit: int = 50, event_type: str | None = None):
+    return audit_service.recent(limit=limit, event_type=event_type)

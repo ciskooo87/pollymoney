@@ -10,6 +10,7 @@ from app.models.market import MarketOrderBook, MarketToken
 from app.models.trade import Trade
 from app.services.risk_manager import RiskManager
 from app.services.portfolio_manager import PortfolioManager
+from app.services.audit_service import AuditService
 from app.services.strategy_manager import StrategyManager
 
 
@@ -18,12 +19,19 @@ class PaperTradingEngine:
         self.strategy_manager = StrategyManager()
         self.risk_manager = RiskManager()
         self.portfolio_manager = PortfolioManager()
+        self.audit_service = AuditService()
 
     def run_cycle(self, max_new_trades: int = 5) -> dict:
         risk_state = self.risk_manager.refresh_state()
         signals = self.strategy_manager.rank_signals()
         opened = []
         skipped = []
+        self.audit_service.log(
+            event_type="paper_cycle_started",
+            entity_type="engine",
+            message="paper trading cycle started",
+            payload={"max_new_trades": max_new_trades, "risk_state": risk_state, "signal_count": len(signals)},
+        )
         for signal in signals:
             if len(opened) >= max_new_trades:
                 break
@@ -31,18 +39,27 @@ class PaperTradingEngine:
             token = self._find_token(signal["market"])
             if not market and not token:
                 skipped.append({"market": signal["market"], "reason": "book_and_token_not_available"})
+                self.audit_service.log("paper_trade_skipped", "signal", "missing market data", payload={"signal": signal, "reason": "book_and_token_not_available"})
                 continue
             estimated_size = self._position_size(signal["confidence"], signal["edge"])
             if not self.risk_manager.allow_trade(signal["confidence"], signal["edge"], requested_size=estimated_size):
                 skipped.append({"market": signal["market"], "reason": "risk_rejected"})
+                self.audit_service.log("paper_trade_skipped", "signal", "risk manager rejected trade", payload={"signal": signal, "reason": "risk_rejected"})
                 continue
             if self._has_open_trade(signal["market"], signal["strategy"]):
                 skipped.append({"market": signal["market"], "reason": "already_open"})
+                self.audit_service.log("paper_trade_skipped", "signal", "trade already open", payload={"signal": signal, "reason": "already_open"})
                 continue
             opened.append(self._open_trade(signal, market, token, estimated_size))
 
         closed = self._mark_to_market_and_close()
         stats = self.summary()
+        self.audit_service.log(
+            event_type="paper_cycle_finished",
+            entity_type="engine",
+            message="paper trading cycle finished",
+            payload={"opened": opened, "closed": closed, "skipped": skipped, "summary": stats},
+        )
         return {
             "opened": opened,
             "closed": closed,
@@ -98,6 +115,13 @@ class PaperTradingEngine:
         with SessionLocal() as session:
             session.add(trade)
             session.commit()
+        self.audit_service.log(
+            event_type="paper_trade_opened",
+            entity_type="trade",
+            entity_id=trade_id,
+            message="paper trade opened",
+            payload={"signal": signal, "asset_id": asset_id, "price": price, "size": size},
+        )
         return {
             "trade_id": trade_id,
             "market_id": signal["market"],
@@ -123,6 +147,13 @@ class PaperTradingEngine:
                     trade.realized_pnl = pnl
                     trade.closed_ts = now
                     trade.status = "closed"
+                    self.audit_service.log(
+                        event_type="paper_trade_closed",
+                        entity_type="trade",
+                        entity_id=trade.id,
+                        message="paper trade closed",
+                        payload={"market_id": trade.market_id, "exit_price": mark, "realized_pnl": pnl},
+                    )
                     closed.append({
                         "trade_id": trade.id,
                         "market_id": trade.market_id,
