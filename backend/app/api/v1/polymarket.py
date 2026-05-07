@@ -1,16 +1,43 @@
 from fastapi import APIRouter, HTTPException, Query
 
 from app.schemas.polymarket import MarketSubscriptionRequest, UserSubscriptionRequest
+from app.services.market_ingestion import MarketIngestionService
+from app.services.market_repository import MarketRepository
 from app.services.polymarket_client import PolymarketClient
 from app.services.polymarket_stream import stream_manager
 
 router = APIRouter()
 client = PolymarketClient()
+ingestion = MarketIngestionService()
+repo = MarketRepository()
 
 
 @router.get("/markets/simplified")
 async def simplified_markets(next_cursor: str | None = None):
     return await client.get_simplified_markets(next_cursor=next_cursor)
+
+
+@router.post("/ingest/markets")
+async def ingest_markets(pages: int = 1):
+    return await ingestion.ingest_simplified_markets(pages=pages)
+
+
+@router.post("/ingest/books")
+async def ingest_books(limit: int = 50):
+    asset_ids = repo.list_asset_ids(limit=limit)
+    if not asset_ids:
+        raise HTTPException(status_code=400, detail="Nenhum asset_id disponível no banco. Faça ingest de markets primeiro.")
+    return await ingestion.ingest_books_for_assets(asset_ids)
+
+
+@router.post("/ingest/history/{asset_id}")
+async def ingest_history(asset_id: str, interval: str = "1d", fidelity: int = 5):
+    return await ingestion.ingest_price_history(asset_id=asset_id, interval=interval, fidelity=fidelity)
+
+
+@router.get("/cache/summary")
+def cache_summary():
+    return repo.dashboard_snapshot()
 
 
 @router.get("/markets/{condition_id}")

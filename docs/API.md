@@ -57,3 +57,9 @@ Payload para conectar market stream:
 ```
 
 > O canal `user` ficou reservado para a próxima etapa, quando a camada autenticada CLOB L2 e execução real/paper autenticada forem plugadas.
+
+## Ingestão e cache local
+- `POST /api/polymarket/ingest/markets?pages=1`
+- `POST /api/polymarket/ingest/books?limit=50`
+- `POST /api/polymarket/ingest/history/{asset_id}?interval=1d&fidelity=5`
+- `GET /api/polymarket/cache/summary`
