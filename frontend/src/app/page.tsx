@@ -1,3 +1,4 @@
+import { LiveControlPanel } from "../components/LiveControlPanel";
 import { MetricCard } from "../components/MetricCard";
 import { fetchJson } from "../lib/api";
 import type { DashboardSnapshot, StrategyRanking, WsStatus } from "../lib/types";
@@ -109,6 +110,8 @@ export default async function HomePage() {
           </div>
 
           <div className="space-y-6">
+            <LiveControlPanel liveConfig={dashboard.live_config} liveRequests={dashboard.live_requests} />
+
             <div className="panel">
               <h2 className="text-xl font-semibold">IA explicável</h2>
               <div className="mt-4 space-y-3 text-sm text-slate-300">
