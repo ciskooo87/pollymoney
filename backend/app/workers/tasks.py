@@ -2,6 +2,7 @@ import asyncio
 
 from app.services.market_ingestion import MarketIngestionService
 from app.services.market_repository import MarketRepository
+from app.services.paper_trading import PaperTradingEngine
 from app.workers.celery_app import celery_app
 
 
@@ -25,6 +26,12 @@ def refresh_order_books(limit: int = 50):
 def refresh_price_history(asset_id: str, interval: str = "1d", fidelity: int = 5):
     service = MarketIngestionService()
     return asyncio.run(service.ingest_price_history(asset_id=asset_id, interval=interval, fidelity=fidelity))
+
+
+@celery_app.task
+def run_paper_trading_cycle(max_new_trades: int = 5):
+    engine = PaperTradingEngine()
+    return engine.run_cycle(max_new_trades=max_new_trades)
 
 
 @celery_app.task

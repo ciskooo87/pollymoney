@@ -125,3 +125,21 @@ class MarketRepository:
                 stmt = stmt.join(Market, Market.condition_id == MarketToken.condition_id).where(Market.active.is_(True))
             stmt = stmt.limit(limit)
             return list(session.execute(stmt).scalars().all())
+
+    def list_signal_candidates(self, limit: int = 25) -> list[dict]:
+        with SessionLocal() as session:
+            rows = session.execute(
+                select(MarketToken.token_id, MarketToken.condition_id, MarketToken.price, Market.active, Market.accepting_orders)
+                .join(Market, Market.condition_id == MarketToken.condition_id)
+                .where(Market.active.is_(True))
+                .order_by(Market.accepting_orders.desc(), MarketToken.price.desc().nullslast())
+                .limit(limit)
+            ).all()
+            return [
+                {
+                    "asset_id": token_id,
+                    "market_id": condition_id,
+                    "price": price,
+                }
+                for token_id, condition_id, price, _active, _accepting_orders in rows
+            ]

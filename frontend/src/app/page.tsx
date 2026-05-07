@@ -11,10 +11,11 @@ function fmt(value: number) {
 }
 
 export default async function HomePage() {
-  const [dashboard, rankings, wsStatus] = await Promise.all([
+  const [dashboard, rankings, wsStatus, trades] = await Promise.all([
     fetchJson<DashboardSnapshot>("/api/dashboard/snapshot"),
     fetchJson<StrategyRanking[]>("/api/strategies/rankings"),
     fetchJson<WsStatus>("/api/polymarket/ws/status"),
+    fetchJson<any[]>("/api/orders/paper/trades?limit=10"),
   ]);
 
   return (
@@ -24,11 +25,11 @@ export default async function HomePage() {
           <div>
             <p className="label mb-3">Autonomous Prediction Market Trading Engine</p>
             <h1 className="text-4xl font-semibold tracking-tight">Trading desk quantitativo para Polymarket</h1>
-            <p className="mt-3 max-w-3xl text-slate-400">Arbitragem, market making, momentum, mean reversion, sentimento e gestão de risco soberana em uma única mesa operacional.</p>
+            <p className="mt-3 max-w-3xl text-slate-400">Agora com loop de paper trading, persistência de posições simuladas e PnL real do motor autônomo.</p>
           </div>
           <div className="panel min-w-64 text-right">
             <div className="label">Modo</div>
-            <div className="mt-2 text-lg font-semibold text-cyan-300">Paper Trading Default</div>
+            <div className="mt-2 text-lg font-semibold text-cyan-300">Paper Trading Live Loop</div>
             <div className="mt-3 text-sm text-slate-400">WS market: {wsStatus.market_connected ? "conectado" : "offline"}</div>
           </div>
         </header>
@@ -37,8 +38,15 @@ export default async function HomePage() {
           <MetricCard label="PnL" value={`$${fmt(dashboard.pnl)}`} />
           <MetricCard label="ROI" value={pct(dashboard.roi)} />
           <MetricCard label="Win Rate" value={pct(dashboard.win_rate)} />
-          <MetricCard label="Exposição" value={`${dashboard.open_positions} pos.`} />
+          <MetricCard label="Posições abertas" value={String(dashboard.open_positions)} />
           <MetricCard label="Drawdown" value={pct(dashboard.drawdown)} />
+        </section>
+
+        <section className="mt-6 grid gap-4 md:grid-cols-4">
+          <MetricCard label="Trades paper" value={String(dashboard.paper_trading.total_trades)} />
+          <MetricCard label="Trades fechados" value={String(dashboard.paper_trading.closed_trades)} />
+          <MetricCard label="Winners" value={String(dashboard.paper_trading.wins)} />
+          <MetricCard label="Conf. média" value={dashboard.paper_trading.avg_confidence.toFixed(2)} />
         </section>
 
         <section className="mt-6 grid gap-4 md:grid-cols-4">
@@ -48,7 +56,7 @@ export default async function HomePage() {
           <MetricCard label="Histórico salvo" value={String(dashboard.market_cache.history_points)} />
         </section>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+        <section className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
             <div className="panel">
               <div className="mb-4 flex items-center justify-between">
@@ -73,20 +81,24 @@ export default async function HomePage() {
 
             <div className="panel">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Top books em cache</h2>
-                <span className="label">best bid / ask</span>
+                <h2 className="text-xl font-semibold">Últimos trades paper</h2>
+                <span className="label">simulados</span>
               </div>
               <div className="space-y-3">
-                {dashboard.market_cache.top_books.length === 0 ? (
-                  <div className="text-sm text-slate-400">Nenhum order book persistido ainda.</div>
+                {trades.length === 0 ? (
+                  <div className="text-sm text-slate-400">Nenhum trade paper gerado ainda.</div>
                 ) : (
-                  dashboard.market_cache.top_books.map((book) => (
-                    <div key={book.asset_id} className="rounded-xl border border-slate-800 px-4 py-3">
-                      <div className="truncate font-medium text-slate-100">{book.condition_id}</div>
-                      <div className="mt-2 grid grid-cols-3 gap-3 text-sm text-slate-400">
-                        <div>Bid: <span className="text-emerald-300">{book.best_bid ?? "-"}</span></div>
-                        <div>Ask: <span className="text-amber-300">{book.best_ask ?? "-"}</span></div>
-                        <div>Last: <span className="text-cyan-300">{book.last_trade_price ?? "-"}</span></div>
+                  trades.map((trade) => (
+                    <div key={trade.id} className="rounded-xl border border-slate-800 px-4 py-3">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">{trade.market_id}</div>
+                        <div className={trade.status === "closed" ? "text-sm text-slate-300" : "text-sm text-cyan-300"}>{trade.status}</div>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-slate-400">
+                        <div>{trade.strategy}</div>
+                        <div className="text-right">size {trade.size}</div>
+                        <div>price {trade.price}</div>
+                        <div className="text-right">pnl {trade.realized_pnl ?? "-"}</div>
                       </div>
                     </div>
                   ))
@@ -110,7 +122,8 @@ export default async function HomePage() {
                 <div className="flex justify-between"><span>User WS</span><span>{wsStatus.user_connected ? "offline" : "reservado"}</span></div>
                 <div className="flex justify-between"><span>Assets inscritos</span><span>{wsStatus.subscribed_assets.length}</span></div>
                 <div className="flex justify-between"><span>Eventos market</span><span>{wsStatus.market_events_cached}</span></div>
-                <div className="flex justify-between"><span>Risk mode</span><span>{dashboard.risk_mode}</span></div>
+                <div className="flex justify-between"><span>Open positions</span><span>{dashboard.paper_trading.open_positions}</span></div>
+                <div className="flex justify-between"><span>Realized PnL</span><span>{fmt(dashboard.paper_trading.realized_pnl)}</span></div>
               </div>
             </div>
           </div>

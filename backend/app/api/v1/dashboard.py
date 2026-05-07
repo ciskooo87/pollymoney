@@ -1,26 +1,31 @@
 from fastapi import APIRouter
 
 from app.services.market_repository import MarketRepository
+from app.services.paper_trading import PaperTradingEngine
 
 router = APIRouter()
 repo = MarketRepository()
+paper = PaperTradingEngine()
 
 
 @router.get("/snapshot")
 def snapshot():
     cache = repo.dashboard_snapshot()
+    paper_summary = paper.summary()
     return {
-        "pnl": 1245.22,
-        "roi": 0.081,
-        "win_rate": 0.58,
-        "open_positions": 7,
-        "daily_target_hit": False,
+        "pnl": paper_summary["realized_pnl"],
+        "roi": paper_summary["realized_pnl"] / 10000 if paper_summary["total_trades"] else 0.0,
+        "win_rate": paper_summary["win_rate"],
+        "open_positions": paper_summary["open_positions"],
+        "daily_target_hit": paper_summary["realized_pnl"] >= 200,
         "drawdown": 0.017,
         "risk_mode": "normal",
+        "paper_trading": paper_summary,
         "market_cache": cache,
         "alerts": [
             "paper trading ativo",
             f"{cache['active_markets']} mercados ativos em cache",
             f"{cache['books_cached']} books persistidos",
+            f"{paper_summary['open_positions']} posições abertas no motor paper",
         ],
     }

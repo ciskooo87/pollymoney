@@ -63,3 +63,8 @@ Payload para conectar market stream:
 - `POST /api/polymarket/ingest/books?limit=50`
 - `POST /api/polymarket/ingest/history/{asset_id}?interval=1d&fidelity=5`
 - `GET /api/polymarket/cache/summary`
+
+## Paper trading
+- `POST /api/orders/paper/run-cycle?max_new_trades=5`
+- `GET /api/orders/paper/summary`
+- `GET /api/orders/paper/trades?limit=20`

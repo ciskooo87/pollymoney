@@ -22,5 +22,10 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute="*/5"),
         "args": (50,),
     },
+    "run-paper-trading-cycle-every-10m": {
+        "task": "app.workers.tasks.run_paper_trading_cycle",
+        "schedule": crontab(minute="*/10"),
+        "args": (5,),
+    },
 }
 celery_app.conf.timezone = "Europe/Berlin"

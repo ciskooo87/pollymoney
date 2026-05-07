@@ -7,6 +7,15 @@ export type DashboardSnapshot = {
   drawdown: number;
   risk_mode: string;
   alerts: string[];
+  paper_trading: {
+    total_trades: number;
+    open_positions: number;
+    closed_trades: number;
+    wins: number;
+    win_rate: number;
+    realized_pnl: number;
+    avg_confidence: number;
+  };
   market_cache: {
     total_markets: number;
     active_markets: number;

@@ -38,3 +38,8 @@ Refresh automático configurado:
 - order books: a cada 5 minutos
 
 Observação: books públicos podem voltar vazios para muitos assets, então ausência de book não deve ser tratada como falha isolada.
+
+
+## Paper trading engine
+
+O motor paper roda ciclos automáticos, tenta abrir posições a partir dos sinais ranqueados, marca posições abertas a mercado e fecha trades por alvo, stop simplificado ou timeout operacional.
